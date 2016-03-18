@@ -53,7 +53,9 @@ setup(
     install_requires=[
         'pynmea2 >= 1.4.2',
         'pyserial >= 2.7',
-        'requests >= 2.7.0'
+        'requests >= 2.7.0',
+        'MySQLdb >= 1.2.5',
+        'mysql >= 2.1.3'
     ],
     package_dir={'apex': 'apex'},
     zip_safe=False,

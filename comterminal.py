@@ -13,6 +13,7 @@ import sys
 import kiss.constants
 import aprs
 import threading
+import mysql
 
 aprskiss = aprs.APRSKISS(com_port="/dev/ttyUSB0")
 aprskiss.start(kiss.constants.MODE_INIT_W8DED)
@@ -45,11 +46,21 @@ status_frame = {
 #a.connect("noam.aprs2.net".encode('ascii'), "14580".encode('ascii'))
 #a.send('WI2ARD>APRS:>Hello World!')
 
+conn = None
+query_write = "INSERT INTO received(source, destination, path, payload) VALUES(%s,%s,%s,%s)"
 def kiss_reader(frame):
     try:
         decoded_frame = aprs.util.decode_Frame(frame)
-        formatted_aprs = aprs.util.forat_aprs_frame(decoded_frame)
-        print(formatted_aprs)
+        if conn is not None:
+            args_write = (decoded_frame['source'], decoded_frame['destination'], decoded_frame['path'], decoded_frame['text'])
+            try:
+                cursor = conn.cursor()
+                cursor.execute(query_write, args_write)
+                conn.commit()
+            finally:
+                cursor.close()
+        formatted_aprs = aprs.util.format_aprs_frame(decoded_frame)
+        print("<< " + formatted_aprs)
     except Exception as ex:
         print(ex)
         print("Error Decoding frame:")
@@ -59,14 +70,21 @@ def kiss_reader_thread():
     aprskiss.read(callback=kiss_reader)
 
 try:
+    #conn = mysql.connector.connect(host='localhost', database='apex', user='apex')
+    #if conn.is_connected() is False:
+    #    raise Exception('Could not connect to database')
     threading.Thread(target=kiss_reader_thread)
-except Exception as ex:
-    print(ex)
-    print("Error couldn't start reader thread")
-
-while 1 :
+    while 1 :
         # let's wait one second before reading output (let's give device time to answer)
         aprskiss.write(beacon_frame)
+        print(">> " + aprs.util.format_aprs_frame(beacon_frame))
         aprskiss.write(status_frame)
+        print(">> " + aprs.util.format_aprs_frame(status_frame))
         time.sleep(600)
+except Exception as ex:
+    print(ex)
+    print("Error running program")
+finally:
+    if conn is not None:
+        conn.close()
 
