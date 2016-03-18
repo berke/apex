@@ -8,24 +8,11 @@ __license__ = 'Apache License, Version 2.0'
 __copyright__ = 'Copyright 2016, Syncleus, Inc. and contributors'
 
 import time
-#import serial
 import signal
 import sys
 import kiss.constants
 import aprs
-
-#kissinit = [13, 27, 64, 75, 13]
-#kissend = [192, 255, 192, 13]
-
-
-# configure the serial connections (the parameters differs on the device you are connecting to)
-#ser = serial.Serial(
-#    port='/dev/ttyUSB0',
-#    baudrate=38400,
-#    parity=serial.PARITY_NONE,
-#    stopbits=serial.STOPBITS_ONE,
-#    bytesize=serial.EIGHTBITS
-#)
+import threading
 
 aprskiss = aprs.APRSKISS(com_port="/dev/ttyUSB0")
 aprskiss.start(kiss.constants.MODE_INIT_W8DED)
@@ -54,22 +41,32 @@ status_frame = {
     'text': '>Robust Packet Radio http://JeffreyFreeman.me'
 }
 
-#ser.write(kissinit)
-
 #a = aprs.APRS('WI2ARD', '17582')
 #a.connect("noam.aprs2.net".encode('ascii'), "14580".encode('ascii'))
 #a.send('WI2ARD>APRS:>Hello World!')
 
-while 1 :
-        #out = ''
+def kiss_reader(frame):
+    try:
+        decoded_frame = aprs.util.decode_Frame(frame)
+        formatted_aprs = aprs.util.forat_aprs_frame(decoded_frame)
+        print(formatted_aprs)
+    except Exception as ex:
+        print(ex)
+        print("Error Decoding frame:")
+        print("\t%s" % frame)
 
+def kiss_reader_thread():
+    aprskiss.read(callback=kiss_reader)
+
+try:
+    threading.Thread(target=kiss_reader_thread)
+except Exception as ex:
+    print(ex)
+    print("Error couldn't start reader thread")
+
+while 1 :
         # let's wait one second before reading output (let's give device time to answer)
         aprskiss.write(beacon_frame)
         aprskiss.write(status_frame)
         time.sleep(600)
-        #while ser.inWaiting() > 0:
-        #    out += ser.read(1).decode('utf-8')
-
-        #if out != '':
-        #    print(out)
 
