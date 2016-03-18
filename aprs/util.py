@@ -271,22 +271,8 @@ def encode_frame(frame):
     enc_frame = encode_callsign(create_callsign(frame['destination'])) + encode_callsign(create_callsign(frame['source']))
     for p in frame['path'].split(','):
         enc_frame += encode_callsign(create_callsign(p))
-#    enc_frame = ''.join([
-#        encode_callsign(create_callsign(frame['destination'])),
-#        encode_callsign(create_callsign(frame['source'])),
-#        ''.join([encode_callsign(create_callsign(p))
-#                 for p in frame['path'].split(',')])
-#    ])
 
     return enc_frame[:-1] + [enc_frame[-1] | 0x01] + [kiss.constants.SLOT_TIME] + [0xf0] + list(bytearray(frame['text'],'ascii'))
-
-#    return ''.join([
-#        enc_frame[:-1],
-#        chr(ord(enc_frame[-1]) | 0x01),
-#        chr(kiss.constants.SLOT_TIME),
-#        chr(0xf0),
-#        frame['text']
-#    ])
 
 
 def decode_frame(raw_frame):

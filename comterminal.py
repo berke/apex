@@ -44,11 +44,10 @@ frame = {
     'source': 'WI2ARD',
     'destination': 'APRS',
     'path': 'WIDE1-1',
-    'text': '`25mfs>/"3x}'
+    'text': '!/:=i@;N.G& --G/D R-I-R H24'
 }
+
 aprskiss.write(frame)
-
-
 #ser.write(kissinit)
 
 #a = aprs.APRS('WI2ARD', '17582')
@@ -59,7 +58,8 @@ while 1 :
         #out = ''
 
         # let's wait one second before reading output (let's give device time to answer)
-        time.sleep(1)
+        time.sleep(600)
+        aprskiss.write(frame)
         #while ser.inWaiting() > 0:
         #    out += ser.read(1).decode('utf-8')
 

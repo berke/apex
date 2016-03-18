@@ -150,7 +150,6 @@ class APRSKISS(kiss.KISS):
         :type frame: str
         """
         encoded_frame = aprs.util.encode_frame(frame)
-        print(encoded_frame)
         super(APRSKISS, self).write_bytes(encoded_frame)
 
 
