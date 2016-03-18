@@ -160,8 +160,8 @@ class KISS(object):
                     else:
                         split_data[-1].append(read_byte)
                 len_fend = len(split_data)
-                if len_fend > 1:
-                    self.logger.debug('len_fend=%s', len_fend)
+                #if len_fend > 1:
+                #    self.logger.debug('len_fend=%s', len_fend)
 
                 # No FEND in frame
                 if len_fend == 1:
