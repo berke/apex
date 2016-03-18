@@ -13,6 +13,7 @@ import logging
 import aprs.constants
 import aprs.decimaldegrees
 import kiss.constants
+import math
 
 
 def dec2dm_lat(dec):
@@ -190,8 +191,8 @@ def extract_callsign(raw_frame):
     :returns: Dict of callsign and ssid.
     :rtype: dict
     """
-    callsign = ''.join([chr(ord(x) >> 1) for x in raw_frame[:6]]).strip()
-    ssid = (ord(raw_frame[6]) >> 1) & 0x0f
+    callsign = ''.join([chr(x >> 1) for x in raw_frame[:6]]).strip()
+    ssid = ((raw_frame[6]) >> 1) & 0x0f
     return {'callsign': callsign, 'ssid': ssid}
 
 
@@ -209,7 +210,7 @@ def extract_path(start, raw_frame):
     for i in range(2, start):
         path = aprs.util.full_callsign(extract_callsign(raw_frame[i * 7:]))
         if path:
-            if ord(raw_frame[i * 7 + 6]) & 0x80:
+            if raw_frame[i * 7 + 6] & 0x80:
                 full_path.append(''.join([path, '*']))
             else:
                 full_path.append(path)
@@ -292,18 +293,17 @@ def decode_frame(raw_frame):
     if frame_len > 16:
         for raw_slice in range(0, frame_len):
             # Is address field length correct?
-            if ord(raw_frame[raw_slice]) & 0x01 and ((raw_slice + 1) % 7) == 0:
+            if raw_frame[raw_slice] & 0x01 and ((raw_slice + 1) % 7) == 0:
                 i = (raw_slice + 1) / 7
                 # Less than 2 callsigns?
                 if 1 < i < 11:
-                    if (ord(raw_frame[raw_slice + 1]) & 0x03 == 0x03 and
-                            ord(raw_frame[raw_slice + 2]) in [0xf0, 0xcf]):
-                        frame['text'] = raw_frame[raw_slice + 3:]
-                        frame['destination'] = full_callsign(
-                            extract_callsign(raw_frame))
-                        frame['source'] = full_callsign(
-                            extract_callsign(raw_frame[7:]))
-                        frame['path'] = format_path(i, raw_frame)
+                    if (raw_frame[raw_slice + 1] & 0x03 == 0x03 and raw_frame[raw_slice + 2] in [0xf0, 0xcf]):
+                        frame['text'] = ''
+                        for frame_byte in raw_frame[raw_slice + 3:]:
+                            frame['text'] += chr(frame_byte)
+                        frame['destination'] = full_callsign(extract_callsign(raw_frame))
+                        frame['source'] = full_callsign(extract_callsign(raw_frame[7:]))
+                        frame['path'] = format_path(math.floor(i), raw_frame)
                         return frame
 
     logging.debug('frame=%s', frame)

@@ -55,4 +55,10 @@ def strip_df_start(frame):
     :returns: APRS/AX.25 frame sans DATA_FRAME start (0x00).
     :rtype: str
     """
-    return frame.lstrip(kiss.constants.DATA_FRAME).strip()
+    while frame[0] is kiss.constants.DATA_FRAME:
+        del frame[0]
+    while chr(frame[0]).isspace():
+        del frame[0]
+    while chr(frame[-1]).isspace():
+        del frame[-1]
+    return frame

@@ -30,7 +30,7 @@ class KISS(object):
     logger.addHandler(console_handler)
     logger.propagate = False
 
-    def __init__(self, com_port=None, baud=38400, parity=serial.PARITY_NONE, stop_bits=serial.STOPBITS_ONE, byte_size=serial.EIGHTBITS, host=None, tcp_port=8000, strip_df_start=False):
+    def __init__(self, com_port=None, baud=38400, parity=serial.PARITY_NONE, stop_bits=serial.STOPBITS_ONE, byte_size=serial.EIGHTBITS, host=None, tcp_port=8000, strip_df_start=True):
         self.com_port = com_port
         self.baud = baud
         self.parity = parity
@@ -135,9 +135,9 @@ class KISS(object):
         :return: List of frames (if readmode=False).
         :rtype: list
         """
-        self.logger.debug('callback=%s readmode=%s', callback, readmode)
+        #self.logger.debug('callback=%s readmode=%s', callback, readmode)
 
-        read_buffer = ''
+        read_buffer = []
 
         while 1:
             read_data = None
@@ -147,26 +147,32 @@ class KISS(object):
                 read_data = self.interface.read(kiss.constants.READ_BYTES)
                 waiting_data = self.interface.inWaiting()
                 if waiting_data:
-                    read_data = ''.join([
-                        read_data, self.interface.read(waiting_data)])
+                    read_data += self.interface.read(waiting_data)
 
             if read_data is not None:
                 frames = []
 
-                split_data = read_data.split(kiss.constants.FEND)
+                split_data = [[]]
+                for read_byte in read_data:
+                    if read_byte is kiss.constants.FEND:
+                        #split_data_index += 1
+                        split_data.append([])
+                    else:
+                        split_data[-1].append(read_byte)
                 len_fend = len(split_data)
-                self.logger.debug('len_fend=%s', len_fend)
+                if len_fend > 1:
+                    self.logger.debug('len_fend=%s', len_fend)
 
                 # No FEND in frame
                 if len_fend == 1:
-                    read_buffer = ''.join([read_buffer, split_data[0]])
+                    read_buffer += split_data[0]
                 # Single FEND in frame
                 elif len_fend == 2:
                     # Closing FEND found
                     if split_data[0]:
                         # Partial frame continued, otherwise drop
-                        frames.append(''.join([read_buffer, split_data[0]]))
-                        read_buffer = ''
+                        frames.append(read_buffer + split_data[0])
+                        read_buffer = []
                     # Opening FEND found
                     else:
                         frames.append(read_buffer)
@@ -174,29 +180,27 @@ class KISS(object):
                 # At least one complete frame received
                 elif len_fend >= 3:
                     for i in range(0, len_fend - 1):
-                        _str = ''.join([read_buffer, split_data[i]])
-                        if _str:
-                            frames.append(_str)
-                            read_buffer = ''
+                        read_buffer_tmp = read_buffer + split_data[i]
+                        if len(read_buffer_tmp) is not 0:
+                            frames.append(read_buffer_tmp)
+                            read_buffer = []
                     if split_data[len_fend - 1]:
                         read_buffer = split_data[len_fend - 1]
 
                 if readmode:
                     # Loop through received frames
                     for frame in frames:
-                        if len(frame) and ord(frame[0]) == 0:
-                            self.logger.debug('frame=%s', frame)
+                        if len(frame) and frame[0] == 0:
+                            #self.logger.debug('frame=%s', frame)
                             if callback:
                                 if 'tcp' in self.interface_mode:
                                     if self.strip_df_start:
-                                        callback(
-                                            kiss.util.strip_df_start(frame))
+                                        callback(kiss.util.strip_df_start(frame))
                                     else:
                                         callback(frame)
                                 elif 'serial' in self.interface_mode:
                                     if self.strip_df_start:
-                                        callback(
-                                            kiss.util.strip_df_start(frame))
+                                        callback(kiss.util.strip_df_start(frame))
                                     else:
                                         callback(frame)
                 elif not readmode:

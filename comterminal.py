@@ -13,10 +13,11 @@ import sys
 import kiss.constants
 import aprs
 import threading
-import mysql
 
-aprskiss = aprs.APRSKISS(com_port="/dev/ttyUSB0")
-aprskiss.start(kiss.constants.MODE_INIT_W8DED)
+aprskiss = aprs.APRSKISS(com_port="/dev/ttyUSB1", baud=9600)
+aprskiss.start(kiss.constants.MODE_INIT_KENWOOD_D710)
+#aprskiss = aprs.APRSKISS(com_port="/dev/ttyUSB0")
+#aprskiss.start(kiss.constants.MODE_INIT_W8DED)
 
 def sigint_handler(signal, frame):
     aprskiss.close()
@@ -46,45 +47,24 @@ status_frame = {
 #a.connect("noam.aprs2.net".encode('ascii'), "14580".encode('ascii'))
 #a.send('WI2ARD>APRS:>Hello World!')
 
-conn = None
-query_write = "INSERT INTO received(source, destination, path, payload) VALUES(%s,%s,%s,%s)"
 def kiss_reader(frame):
-    try:
-        decoded_frame = aprs.util.decode_Frame(frame)
-        if conn is not None:
-            args_write = (decoded_frame['source'], decoded_frame['destination'], decoded_frame['path'], decoded_frame['text'])
-            try:
-                cursor = conn.cursor()
-                cursor.execute(query_write, args_write)
-                conn.commit()
-            finally:
-                cursor.close()
-        formatted_aprs = aprs.util.format_aprs_frame(decoded_frame)
-        print("<< " + formatted_aprs)
-    except Exception as ex:
-        print(ex)
-        print("Error Decoding frame:")
-        print("\t%s" % frame)
+    print("reader called [" + str(len(frame)) + "]: " + str(frame))
+    decoded_frame = aprs.util.decode_frame(frame)
+    print("decoded: " + str(decoded_frame))
+    formatted_aprs = aprs.util.format_aprs_frame(decoded_frame)
+    print("<< " + formatted_aprs)
 
 def kiss_reader_thread():
+    print("Begining kiss reader thread...")
     aprskiss.read(callback=kiss_reader)
 
-try:
-    #conn = mysql.connector.connect(host='localhost', database='apex', user='apex')
-    #if conn.is_connected() is False:
-    #    raise Exception('Could not connect to database')
-    threading.Thread(target=kiss_reader_thread)
-    while 1 :
-        # let's wait one second before reading output (let's give device time to answer)
-        aprskiss.write(beacon_frame)
-        print(">> " + aprs.util.format_aprs_frame(beacon_frame))
-        aprskiss.write(status_frame)
-        print(">> " + aprs.util.format_aprs_frame(status_frame))
-        time.sleep(600)
-except Exception as ex:
-    print(ex)
-    print("Error running program")
-finally:
-    if conn is not None:
-        conn.close()
+
+threading.Thread(target=kiss_reader_thread, args=()).start()
+while 1 :
+    # let's wait one second before reading output (let's give device time to answer)
+    aprskiss.write(beacon_frame)
+    print(">> " + aprs.util.format_aprs_frame(beacon_frame))
+    aprskiss.write(status_frame)
+    print(">> " + aprs.util.format_aprs_frame(status_frame))
+    time.sleep(600)
 
