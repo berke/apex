@@ -40,14 +40,20 @@ print("Press ctrl + c at any time to exit")
 
 #After 5 seconds send out a test package.
 time.sleep(1)
-frame = {
+beacon_frame = {
     'source': 'WI2ARD',
     'destination': 'APRS',
     'path': 'WIDE1-1',
     'text': '!/:=i@;N.G& --G/D R-I-R H24'
 }
 
-aprskiss.write(frame)
+status_frame = {
+    'source': 'WI2ARD',
+    'destination': 'APRS',
+    'path': 'WIDE1-1',
+    'text': '>Robust Packet Radio http://JeffreyFreeman.me'
+}
+
 #ser.write(kissinit)
 
 #a = aprs.APRS('WI2ARD', '17582')
@@ -58,8 +64,9 @@ while 1 :
         #out = ''
 
         # let's wait one second before reading output (let's give device time to answer)
+        aprskiss.write(beacon_frame)
+        aprskiss.write(status_frame)
         time.sleep(600)
-        aprskiss.write(frame)
         #while ser.inWaiting() > 0:
         #    out += ser.read(1).decode('utf-8')
 
