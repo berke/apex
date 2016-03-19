@@ -125,8 +125,6 @@ def format_aprs_frame(frame):
     return formatted_frame
 
 
-
-
 def valid_callsign(callsign):
     """
     Validates callsign.
