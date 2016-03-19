@@ -153,7 +153,10 @@ class APRSKISS(kiss.KISS):
         """Reads APRS-encoded frame from KISS device.
         """
         frame = super(APRSKISS, self).read()
-        return APRSKISS.__decode_frame(frame)
+        if frame is not None and len(frame):
+            return APRSKISS.__decode_frame(frame)
+        else:
+            return None
 
     @staticmethod
     def __decode_frame(raw_frame):
