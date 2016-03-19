@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Tests for Python APRS-IS Bindings."""
+import aprs.aprs_internet_service
 
 __author__ = 'Jeffrey Phillips Freeman WI2ARD <freemo@gmail.com>'
 __license__ = 'Apache License, Version 2.0'
@@ -83,7 +84,7 @@ class APRSTest(unittest.TestCase):  # pylint: disable=R0904
             status=204
         )
 
-        aprs_conn = aprs.APRS(
+        aprs_conn = aprs.aprs_internet_service.AprsInternetService(
             user=self.fake_callsign,
             input_url=self.fake_server
         )
@@ -110,7 +111,7 @@ class APRSTest(unittest.TestCase):  # pylint: disable=R0904
             status=401
         )
 
-        aprs_conn = aprs.APRS(
+        aprs_conn = aprs.aprs_internet_service.AprsInternetService(
             user=self.fake_callsign,
             input_url=self.fake_server
         )
@@ -131,7 +132,7 @@ class APRSTest(unittest.TestCase):  # pylint: disable=R0904
         """
         Tests APRS-IS binding against a real APRS-IS server.
         """
-        aprs_conn = aprs.APRS(
+        aprs_conn = aprs.aprs_internet_service.AprsInternetService(
             user=self.real_callsign,
             input_url=self.real_server
         )

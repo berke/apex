@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """This is the entry point for the application, just a sandbox right now."""
+import aprs.aprs_kiss
 
 __author__ = 'Jeffrey Phillips Freeman WI2ARD <freemo@gmail.com>'
 __license__ = 'Apache License, Version 2.0'
@@ -14,7 +15,7 @@ import kiss.constants
 import aprs
 import threading
 
-aprskiss = aprs.APRSKISS(com_port="/dev/ttyUSB1", baud=9600)
+aprskiss = aprs.aprs_kiss.AprsKiss(com_port="/dev/ttyUSB1", baud=9600)
 aprskiss.start(kiss.constants.MODE_INIT_KENWOOD_D710)
 #aprskiss = aprs.APRSKISS(com_port="/dev/ttyUSB0", baud=38400)
 #aprskiss.start(kiss.constants.MODE_INIT_W8DED)

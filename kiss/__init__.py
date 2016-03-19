@@ -15,13 +15,13 @@ KISS Python Module.
 
 """
 
-__author__ = 'Greg Albrecht W2GMD <gba@orionlabs.co>'
-__copyright__ = 'Copyright 2015 Orion Labs, Inc. and Contributors'
+__author__ = 'Jeffrey Phillips Freeman WI2ARD <freemo@gmail.com>'
 __license__ = 'Apache License, Version 2.0'
+__copyright__ = 'Copyright 2016, Syncleus, Inc. and contributors'
 
 
 import logging
-from .classes import KISS
+from .kiss import KISS
 
 
 # Set default logging handler to avoid "No handler found" warnings.
