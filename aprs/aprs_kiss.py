@@ -154,7 +154,6 @@ class AprsKiss(kiss.Kiss):
         encoded = []
         for p in call_sign:
             encoded += [ord(p) << 1]
-    #    encoded = ''.join([chr(ord(p) << 1) for p in call_sign])
         return encoded + [enc_ssid]
 
     @staticmethod
