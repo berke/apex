@@ -13,7 +13,7 @@ import math
 import kiss
 
 
-class AprsKiss(kiss.KISS):
+class AprsKiss(kiss.Kiss):
 
     """APRS interface for KISS serial devices."""
 

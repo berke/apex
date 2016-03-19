@@ -15,7 +15,7 @@ import kiss.constants
 import kiss.util
 
 
-class KISS(object):
+class Kiss(object):
 
     """KISS Object Class."""
 
@@ -199,7 +199,7 @@ class KISS(object):
         for new_frame in new_frames:
             if len(new_frame) and new_frame[0] == 0:
                 if self.strip_df_start:
-                    new_frame = KISS.__strip_df_start(new_frame)
+                    new_frame = Kiss.__strip_df_start(new_frame)
                 self.frame_buffer.append(new_frame)
 
     def read(self):

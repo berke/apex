@@ -21,7 +21,7 @@ __copyright__ = 'Copyright 2016, Syncleus, Inc. and contributors'
 
 
 import logging
-from .kiss import KISS
+from .kiss import Kiss
 
 
 # Set default logging handler to avoid "No handler found" warnings.
