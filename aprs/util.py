@@ -110,38 +110,19 @@ def format_aprs_frame(frame):
     formatted_frame = ':'.join([formatted_frame, frame['text']])
     return formatted_frame
 
-
-def create_callsign(raw_callsign):
-    """
-    Creates callsign-as-dict from callsign-as-string.
-
-    :param raw_callsign: Callsign-as-string (with or without ssid).
-    :type raw_callsign: str
-
-    :return: Callsign-as-dict.
-    :rtype: dict
-    """
-    if '-' in raw_callsign:
-        call_sign, ssid = raw_callsign.split('-')
-    else:
-        call_sign = raw_callsign
-        ssid = 0
-    return {'callsign': call_sign, 'ssid': int(ssid)}
-
-
-def full_callsign(callsign):
+def identity_as_string(identity):
     """
     Returns a fully-formatted callsign (Callsign + SSID).
 
-    :param callsign: Callsign Dictionary {'callsign': '', 'ssid': n}
+    :param identity: Callsign Dictionary {'callsign': '', 'ssid': n}
     :type callsign: dict
     :returns: Callsign[-SSID].
     :rtype: str
     """
-    if callsign['ssid'] > 0:
-        return '-'.join([callsign['callsign'], str(callsign['ssid'])])
+    if identity['ssid'] > 0:
+        return '-'.join([identity['callsign'], str(identity['ssid'])])
     else:
-        return callsign['callsign']
+        return identity['callsign']
 
 
 def valid_callsign(callsign):
@@ -231,51 +212,6 @@ def format_path(start, raw_frame):
     return ','.join(extract_path(start, raw_frame))
 
 
-def encode_callsign(callsign):
-    """
-    Encodes a callsign-dict within a KISS frame.
-
-    :param callsign: Callsign-dict to encode.
-    :type callsign: dict
-
-    :return: KISS-encoded callsign.
-    :rtype: list
-    """
-    call_sign = callsign['callsign']
-
-    enc_ssid = (callsign['ssid'] << 1) | 0x60
-
-    if '*' in call_sign:
-        call_sign = call_sign.replace('*', '')
-        enc_ssid |= 0x80
-
-    while len(call_sign) < 6:
-        call_sign = ''.join([call_sign, ' '])
-
-    encoded = []
-    for p in call_sign:
-        encoded += [ord(p) << 1]
-#    encoded = ''.join([chr(ord(p) << 1) for p in call_sign])
-    return encoded + [enc_ssid]
-
-
-def encode_frame(frame):
-    """
-    Encodes an APRS frame-as-dict as a KISS frame.
-
-    :param frame: APRS frame-as-dict to encode.
-    :type frame: dict
-
-    :return: KISS-encoded APRS frame.
-    :rtype: list
-    """
-    enc_frame = encode_callsign(create_callsign(frame['destination'])) + encode_callsign(create_callsign(frame['source']))
-    for p in frame['path'].split(','):
-        enc_frame += encode_callsign(create_callsign(p))
-
-    return enc_frame[:-1] + [enc_frame[-1] | 0x01] + [kiss.constants.SLOT_TIME] + [0xf0] + list(bytearray(frame['text'],'ascii'))
-
-
 def decode_frame(raw_frame):
     """
     Decodes a KISS-encoded APRS frame.
@@ -298,64 +234,14 @@ def decode_frame(raw_frame):
                 # Less than 2 callsigns?
                 if 1 < i < 11:
                     if (raw_frame[raw_slice + 1] & 0x03 == 0x03 and raw_frame[raw_slice + 2] in [0xf0, 0xcf]):
-                        frame['text'] = ''
-                        for frame_byte in raw_frame[raw_slice + 3:]:
-                            frame['text'] += chr(frame_byte)
-                        frame['destination'] = full_callsign(extract_callsign(raw_frame))
-                        frame['source'] = full_callsign(extract_callsign(raw_frame[7:]))
+                        frame['text'] = raw_frame[raw_slice + 3:]
+                        frame['destination'] = identity_as_string(extract_callsign(raw_frame))
+                        frame['source'] = identity_as_string(extract_callsign(raw_frame[7:]))
                         frame['path'] = format_path(math.floor(i), raw_frame)
                         return frame
 
     logging.debug('frame=%s', frame)
     return frame
-
-
-def create_location_frame(source, latitude, longitude, altitude, course, speed,
-                          symboltable, symbolcode, comment=None,
-                          destination='APRS', path=None):
-    """
-    Creates an APRS Location frame.
-
-    :param source: Source callsign (or callsign + SSID).
-    :param latitude: Latitude.
-    :param longitude: Longitude.
-    :param altitude: Altitude.
-    :param course: Course.
-    :param speed: Speed.
-    :param symboltable: APRS Symboltable.
-    :param symbolcode: APRS Symbolcode.
-    :param comment: Comment field. Default: Module + version.
-    :param destination: Destination callsign. Default: 'APRS'.
-    :param path: APRS Path.
-
-    :return: APRS location frame.
-    :rtype: str
-    """
-    comment = comment or 'APRS Python Module'
-
-    location_text = ''.join([
-        '!',
-        latitude,
-        symboltable,
-        longitude,
-        symbolcode,
-        "%03d" % course,
-        '/',
-        "%03d" % speed,
-        '/',
-        'A=',
-        "%06d" % altitude,
-        ' ',
-        comment
-    ])
-    frame_dict = {
-        'source': source,
-        'destination': destination,
-        'path': path,
-        'text': location_text
-    }
-    return format_aprs_frame(frame_dict)
-
 
 def run_doctest():  # pragma: no cover
     """Runs doctests for this module."""

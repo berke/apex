@@ -149,78 +149,68 @@ class APRSKISS(kiss.KISS):
         :param frame: APRS frame to write to KISS device.
         :type frame: str
         """
-        encoded_frame = aprs.util.encode_frame(frame)
+        encoded_frame = APRSKISS.encode_frame(frame)
         super(APRSKISS, self).write_bytes(encoded_frame)
 
-
-class SerialGPSPoller(threading.Thread):
-
-    """Threadable Object for polling a serial NMEA-compatible GPS."""
-
-    NMEA_PROPERTIES = [
-        'timestamp',
-        'lat',
-        'latitude',
-        'lat_dir',
-        'lon',
-        'longitude',
-        'lon_dir',
-        'gps_qual',
-        'mode_indicator',
-        'num_sats',
-        'hdop',
-        'altitude',
-        'horizontal_dil',
-        'altitude_units',
-        'geo_sep',
-        'geo_sep_units',
-        'age_gps_data',
-        'ref_station_id',
-        'pos_fix_dim',
-        'mode_fix_type',
-        'mode',
-        'pdop',
-        'vdop',
-        'fix'
-    ]
-
-    _logger = logging.getLogger(__name__)
-    _logger.setLevel(aprs.constants.LOG_LEVEL)
-    _console_handler = logging.StreamHandler()
-    _console_handler.setLevel(aprs.constants.LOG_LEVEL)
-    _console_handler.setFormatter(aprs.constants.LOG_FORMAT)
-    _logger.addHandler(_console_handler)
-    _logger.propagate = False
-
-    def __init__(self, serial_port, serial_speed):
-        threading.Thread.__init__(self)
-        self._serial_port = serial_port
-        self._serial_speed = serial_speed
-        self._stopped = False
-
-        self.gps_props = {}
-        for prop in self.NMEA_PROPERTIES:
-            self.gps_props[prop] = None
-
-        self._serial_int = serial.Serial(
-            self._serial_port, self._serial_speed, timeout=1)
-
-    def stop(self):
+    @staticmethod
+    def encode_frame(frame):
         """
-        Stop the thread at the next opportunity.
-        """
-        self._stopped = True
-        return self._stopped
+        Encodes an APRS frame-as-dict as a KISS frame.
 
-    def run(self):
-        streamreader = pynmea2.NMEAStreamReader(self._serial_int)
-        try:
-            while not self._stopped:
-                for msg in streamreader.next():
-                    for prop in self.NMEA_PROPERTIES:
-                        if getattr(msg, prop, None) is not None:
-                            self.gps_props[prop] = getattr(msg, prop)
-                            self._logger.debug(
-                                '%s=%s', prop, self.gps_props[prop])
-        except StopIteration:
-            pass
+        :param frame: APRS frame-as-dict to encode.
+        :type frame: dict
+
+        :return: KISS-encoded APRS frame.
+        :rtype: list
+        """
+        enc_frame = APRSKISS.encode_callsign(APRSKISS.parse_identity_string(frame['destination'])) + APRSKISS.encode_callsign(APRSKISS.parse_identity_string(frame['source']))
+        for p in frame['path'].split(','):
+            enc_frame += APRSKISS.encode_callsign(APRSKISS.parse_identity_string(p))
+
+        return enc_frame[:-1] + [enc_frame[-1] | 0x01] + [kiss.constants.SLOT_TIME] + [0xf0] + list(bytearray(frame['text'],'ascii'))
+
+    @staticmethod
+    def encode_callsign(callsign):
+        """
+        Encodes a callsign-dict within a KISS frame.
+
+        :param callsign: Callsign-dict to encode.
+        :type callsign: dict
+
+        :return: KISS-encoded callsign.
+        :rtype: list
+        """
+        call_sign = callsign['callsign']
+
+        enc_ssid = (callsign['ssid'] << 1) | 0x60
+
+        if '*' in call_sign:
+            call_sign = call_sign.replace('*', '')
+            enc_ssid |= 0x80
+
+        while len(call_sign) < 6:
+            call_sign = ''.join([call_sign, ' '])
+
+        encoded = []
+        for p in call_sign:
+            encoded += [ord(p) << 1]
+    #    encoded = ''.join([chr(ord(p) << 1) for p in call_sign])
+        return encoded + [enc_ssid]
+
+    @staticmethod
+    def parse_identity_string(identity_string):
+        """
+        Creates callsign-as-dict from callsign-as-string.
+
+        :param identity_string: Callsign-as-string (with or without ssid).
+        :type raw_callsign: str
+
+        :return: Callsign-as-dict.
+        :rtype: dict
+        """
+        if '-' in identity_string:
+            call_sign, ssid = identity_string.split('-')
+        else:
+            call_sign = identity_string
+            ssid = 0
+        return {'callsign': call_sign, 'ssid': int(ssid)}

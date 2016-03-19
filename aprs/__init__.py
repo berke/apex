@@ -16,8 +16,8 @@ APRS Python Module.
 """
 
 import logging
-
-from .classes import APRS, APRSKISS, SerialGPSPoller
+from .classes import APRSKISS
+from .classes import APRS
 
 
 # Set default logging handler to avoid "No handler found" warnings.
