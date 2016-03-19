@@ -189,7 +189,7 @@ def extract_path(start, raw_frame):
     full_path = []
 
     for i in range(2, start):
-        path = aprs.util.full_callsign(extract_callsign(raw_frame[i * 7:]))
+        path = aprs.util.identity_as_string(extract_callsign(raw_frame[i * 7:]))
         if path:
             if raw_frame[i * 7 + 6] & 0x80:
                 full_path.append(''.join([path, '*']))
