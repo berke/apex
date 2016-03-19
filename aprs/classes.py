@@ -163,7 +163,7 @@ class APRSKISS(kiss.KISS):
         for p in frame['path'].split(','):
             enc_frame += APRSKISS.__encode_callsign(APRSKISS.__parse_identity_string(p))
 
-        return enc_frame[:-1] + [enc_frame[-1] | 0x01] + [kiss.constants.SLOT_TIME] + [0xf0] + list(bytearray(frame['text'],'ascii'))
+        return enc_frame[:-1] + [enc_frame[-1] | 0x01] + [kiss.constants.SLOT_TIME] + [0xf0] + frame['text']
 
     @staticmethod
     def __encode_callsign(callsign):

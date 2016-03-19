@@ -33,14 +33,14 @@ beacon_frame = {
     'source': 'WI2ARD',
     'destination': 'APRS',
     'path': 'WIDE1-1',
-    'text': '!/:=i@;N.G& --G/D R-I-R H24'
+    'text': list(b'!/:=i@;N.G& --G/D R-I-R H24')
 }
 
 status_frame = {
     'source': 'WI2ARD',
     'destination': 'APRS',
     'path': 'WIDE1-1',
-    'text': '>Robust Packet Radio http://JeffreyFreeman.me'
+    'text': list(b'>Robust Packet Radio http://JeffreyFreeman.me')
 }
 
 #a = aprs.APRS('WI2ARD', '17582')
