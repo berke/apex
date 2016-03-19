@@ -43,7 +43,7 @@ class AprsKiss(kiss.Kiss):
                             frame['text'] = raw_frame[raw_slice + 3:]
                             frame['destination'] = AprsKiss.__identity_as_string(AprsKiss.__extract_callsign(raw_frame))
                             frame['source'] = AprsKiss.__identity_as_string(AprsKiss.__extract_callsign(raw_frame[7:]))
-                            frame['path'] = AprsKiss.__format_path(math.floor(i), raw_frame)
+                            frame['path'] = AprsKiss.__extract_path(math.floor(i), raw_frame)
                             return frame
 
         logging.debug('frame=%s', frame)
@@ -70,19 +70,6 @@ class AprsKiss(kiss.Kiss):
                     full_path.append(path)
 
         return full_path
-
-    @staticmethod
-    def __format_path(start, raw_frame):
-        """
-        Formats path from raw APRS KISS frame.
-
-        :param start:
-        :param raw_frame: Raw APRS KISS frame.
-
-        :return: Formatted APRS path.
-        :rtype: str
-        """
-        return ','.join(AprsKiss.__extract_path(start, raw_frame))
 
     @staticmethod
     def __extract_callsign(raw_frame):
@@ -124,7 +111,7 @@ class AprsKiss(kiss.Kiss):
         :rtype: list
         """
         enc_frame = AprsKiss.__encode_callsign(AprsKiss.__parse_identity_string(frame['destination'])) + AprsKiss.__encode_callsign(AprsKiss.__parse_identity_string(frame['source']))
-        for p in frame['path'].split(','):
+        for p in frame['path']:
             enc_frame += AprsKiss.__encode_callsign(AprsKiss.__parse_identity_string(p))
 
         return enc_frame[:-1] + [enc_frame[-1] | 0x01] + [kiss.constants.SLOT_TIME] + [0xf0] + frame['text']

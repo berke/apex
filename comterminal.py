@@ -35,28 +35,28 @@ time.sleep(1)
 beacon_frame_vhf = {
     'source': 'WI2ARD-1',
     'destination': 'APRS',
-    'path': 'WIDE1-1,WIDE2-2',
+    'path': ['WIDE1-1', 'WIDE2-2'],
     'text': list(b'!/:=i@;N.G& --G/D R-I-R H24')
 }
 
 beacon_frame_hf = {
     'source': 'WI2ARD',
     'destination': 'APRS',
-    'path': 'WIDE1-1',
+    'path': ['WIDE1-1'],
     'text': list(b'!/:=i@;N.G& --G/D R-I-R H24')
 }
 
 status_frame_vhf = {
     'source': 'WI2ARD-1',
     'destination': 'APRS',
-    'path': 'WIDE1-1,WIDE2-2',
+    'path':['WIDE1-1', 'WIDE2-2'],
     'text': list(b'>Listening on 146.52Mhz http://JeffreyFreeman.me')
 }
 
 status_frame_hf = {
     'source': 'WI2ARD',
     'destination': 'APRS',
-    'path': 'WIDE1-1',
+    'path': ['WIDE1-1'],
     'text': list(b'>Robust Packet Radio http://JeffreyFreeman.me')
 }
 

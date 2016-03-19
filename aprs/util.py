@@ -93,6 +93,18 @@ def decode_aprs_ascii_frame(ascii_frame):
 
     return decoded_frame
 
+def format_path(path_list):
+    """
+    Formats path from raw APRS KISS frame.
+
+    :param path_list: List of path elements.
+    :type path_list: list
+
+    :return: Formatted APRS path.
+    :rtype: str
+    """
+    return ','.join(path_list)
+
 
 def format_aprs_frame(frame):
     """
@@ -106,7 +118,7 @@ def format_aprs_frame(frame):
     """
     formatted_frame = '>'.join([frame['source'], frame['destination']])
     if frame['path']:
-        formatted_frame = ','.join([formatted_frame, frame['path']])
+        formatted_frame = ','.join([formatted_frame, format_path(frame['path'])])
     formatted_frame += ':'
     for frame_byte in frame['text']:
         formatted_frame += chr(frame_byte)
