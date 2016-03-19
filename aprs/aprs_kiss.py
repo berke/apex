@@ -17,24 +17,6 @@ class AprsKiss(kiss.Kiss):
 
     """APRS interface for KISS serial devices."""
 
-    def write(self, frame):
-        """Writes APRS-encoded frame to KISS device.
-
-        :param frame: APRS frame to write to KISS device.
-        :type frame: dict
-        """
-        encoded_frame = AprsKiss.__encode_frame(frame)
-        super(AprsKiss, self).write(encoded_frame)
-
-    def read(self):
-        """Reads APRS-encoded frame from KISS device.
-        """
-        frame = super(AprsKiss, self).read()
-        if frame is not None and len(frame):
-            return AprsKiss.__decode_frame(frame)
-        else:
-            return None
-
     @staticmethod
     def __decode_frame(raw_frame):
         """
@@ -192,3 +174,21 @@ class AprsKiss(kiss.Kiss):
             call_sign = identity_string
             ssid = 0
         return {'callsign': call_sign, 'ssid': int(ssid)}
+
+    def write(self, frame):
+        """Writes APRS-encoded frame to KISS device.
+
+        :param frame: APRS frame to write to KISS device.
+        :type frame: dict
+        """
+        encoded_frame = AprsKiss.__encode_frame(frame)
+        super(AprsKiss, self).write(encoded_frame)
+
+    def read(self):
+        """Reads APRS-encoded frame from KISS device.
+        """
+        frame = super(AprsKiss, self).read()
+        if frame is not None and len(frame):
+            return AprsKiss.__decode_frame(frame)
+        else:
+            return None
