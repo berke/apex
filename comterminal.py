@@ -56,7 +56,8 @@ def kiss_reader(frame):
 
 def kiss_reader_thread():
     print("Begining kiss reader thread...")
-    aprskiss.read(callback=kiss_reader)
+    while 1:
+        kiss_reader(aprskiss.read())
 
 
 threading.Thread(target=kiss_reader_thread, args=()).start()

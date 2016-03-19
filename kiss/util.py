@@ -46,19 +46,3 @@ def extract_ui(frame):
     return ''.join([chr(ord(x) >> 1) for x in end_ui[0]])
 
 
-def strip_df_start(frame):
-    """
-    Strips KISS DATA_FRAME start (0x00) and newline from frame.
-
-    :param frame: APRS/AX.25 frame.
-    :type frame: str
-    :returns: APRS/AX.25 frame sans DATA_FRAME start (0x00).
-    :rtype: str
-    """
-    while frame[0] is kiss.constants.DATA_FRAME:
-        del frame[0]
-    while chr(frame[0]).isspace():
-        del frame[0]
-    while chr(frame[-1]).isspace():
-        del frame[-1]
-    return frame

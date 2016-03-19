@@ -11,13 +11,9 @@ __copyright__ = 'Copyright 2016, Syncleus, Inc. and contributors'
 import logging
 import logging.handlers
 import socket
-import threading
-
 import kiss
-import pynmea2
+import kiss.constants
 import requests
-import serial
-
 import aprs.constants
 import aprs.util
 
@@ -147,13 +143,13 @@ class APRSKISS(kiss.KISS):
         """Writes APRS-encoded frame to KISS device.
 
         :param frame: APRS frame to write to KISS device.
-        :type frame: str
+        :type frame: dict
         """
-        encoded_frame = APRSKISS.encode_frame(frame)
+        encoded_frame = APRSKISS.__encode_frame(frame)
         super(APRSKISS, self).write_bytes(encoded_frame)
 
     @staticmethod
-    def encode_frame(frame):
+    def __encode_frame(frame):
         """
         Encodes an APRS frame-as-dict as a KISS frame.
 
@@ -163,14 +159,14 @@ class APRSKISS(kiss.KISS):
         :return: KISS-encoded APRS frame.
         :rtype: list
         """
-        enc_frame = APRSKISS.encode_callsign(APRSKISS.parse_identity_string(frame['destination'])) + APRSKISS.encode_callsign(APRSKISS.parse_identity_string(frame['source']))
+        enc_frame = APRSKISS.__encode_callsign(APRSKISS.__parse_identity_string(frame['destination'])) + APRSKISS.__encode_callsign(APRSKISS.__parse_identity_string(frame['source']))
         for p in frame['path'].split(','):
-            enc_frame += APRSKISS.encode_callsign(APRSKISS.parse_identity_string(p))
+            enc_frame += APRSKISS.__encode_callsign(APRSKISS.__parse_identity_string(p))
 
         return enc_frame[:-1] + [enc_frame[-1] | 0x01] + [kiss.constants.SLOT_TIME] + [0xf0] + list(bytearray(frame['text'],'ascii'))
 
     @staticmethod
-    def encode_callsign(callsign):
+    def __encode_callsign(callsign):
         """
         Encodes a callsign-dict within a KISS frame.
 
@@ -198,7 +194,7 @@ class APRSKISS(kiss.KISS):
         return encoded + [enc_ssid]
 
     @staticmethod
-    def parse_identity_string(identity_string):
+    def __parse_identity_string(identity_string):
         """
         Creates callsign-as-dict from callsign-as-string.
 
