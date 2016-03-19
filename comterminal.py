@@ -16,9 +16,9 @@ import aprs
 import aprs.util
 import threading
 
-aprskiss = aprs.aprs_kiss.AprsKiss(com_port="/dev/ttyUSB1", baud=9600)
+aprskiss = aprs.AprsKiss(com_port="/dev/ttyUSB1", baud=9600)
 aprskiss.start(kiss.constants.MODE_INIT_KENWOOD_D710)
-#aprskiss = aprs.APRSKISS(com_port="/dev/ttyUSB0", baud=38400)
+#aprskiss = aprs.AprsKiss(com_port="/dev/ttyUSB0", baud=38400)
 #aprskiss.start(kiss.constants.MODE_INIT_W8DED)
 
 def sigint_handler(signal, frame):
