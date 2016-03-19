@@ -93,6 +93,26 @@ class Kiss(object):
             del frame[-1]
         return frame
 
+    @staticmethod
+    def __escape_special_codes(raw_code_bytes):
+        """
+        Escape special codes, per KISS spec.
+
+        "If the FEND or FESC codes appear in the data to be transferred, they
+        need to be escaped. The FEND code is then sent as FESC, TFEND and the
+        FESC is then sent as FESC, TFESC."
+        - http://en.wikipedia.org/wiki/KISS_(TNC)#Description
+        """
+        encoded_bytes = []
+        for raw_code_byte in raw_code_bytes:
+            if raw_code_byte is kiss.constants.FESC:
+                encoded_bytes += kiss.constants.FESC_TFESC
+            elif raw_code_byte is kiss.constants.FEND:
+                encoded_bytes += kiss.constants.FESC_TFEND
+            else:
+                encoded_bytes += [raw_code_byte];
+        return encoded_bytes
+
     def start(self, mode_init=None, **kwargs):
         """
         Initializes the KISS device and commits configuration.
@@ -148,7 +168,7 @@ class Kiss(object):
         return self.interface.write(
             kiss.constants.FEND +
             getattr(kiss.constants, name.upper()) +
-            kiss.util.escape_special_codes(value) +
+            Kiss.__escape_special_codes(value) +
             kiss.constants.FEND
         )
 
@@ -230,6 +250,6 @@ class Kiss(object):
             return interface_handler(
                 [kiss.constants.FEND] +
                 [kiss.constants.DATA_FRAME] +
-                kiss.util.escape_special_codes(frame_bytes) +
+                Kiss.__escape_special_codes(frame_bytes) +
                 [kiss.constants.FEND]
             )
