@@ -13,6 +13,7 @@ import signal
 import sys
 import kiss.constants
 import aprs
+import aprs.util
 import threading
 
 aprskiss = aprs.aprs_kiss.AprsKiss(com_port="/dev/ttyUSB1", baud=9600)
