@@ -22,7 +22,8 @@ rpr = aprs.AprsKiss(com_port="/dev/ttyUSB0", baud=38400)
 rpr.start(kiss.constants.MODE_INIT_W8DED)
 
 def sigint_handler(signal, frame):
-    aprskiss.close()
+    kenwood.close()
+    rpr.close()
     sys.exit(0)
 
 signal.signal(signal.SIGINT, sigint_handler)
