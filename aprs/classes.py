@@ -146,7 +146,7 @@ class APRSKISS(kiss.KISS):
         :type frame: dict
         """
         encoded_frame = APRSKISS.__encode_frame(frame)
-        super(APRSKISS, self).write_bytes(encoded_frame)
+        super(APRSKISS, self).write(encoded_frame)
 
     @staticmethod
     def __encode_frame(frame):

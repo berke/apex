@@ -215,7 +215,7 @@ class KISS(object):
         else:
             return None
 
-    def write_bytes(self, frame_bytes):
+    def write(self, frame_bytes):
         """
         Writes frame to KISS interface.
 
@@ -235,6 +235,3 @@ class KISS(object):
                 kiss.util.escape_special_codes(frame_bytes) +
                 [kiss.constants.FEND]
             )
-
-    def write(self, frame):
-        self.write_bytes(bytearray(frame, 'ascii'))
