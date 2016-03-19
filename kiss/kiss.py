@@ -113,6 +113,22 @@ class Kiss(object):
                 encoded_bytes += [raw_code_byte];
         return encoded_bytes
 
+    @staticmethod
+    def __command_byte_combine(port, command_code):
+        """
+        Constructs the command byte for the tnc which includes the tnc port and command code.
+        :param port: integer from 0 to 127 indicating the TNC port
+        :type port: int
+        :param command_code: A command code constant, a value from 0 to 127
+        :type command_code: int
+        :return: An integer combining the two values into a single byte
+        """
+        if port > 127 or port < 0:
+            raise Exception("port out of range")
+        elif command_code > 127 or command_code < 0:
+            raise Exception("command_Code out of range")
+        return (port<<4) & command_code
+
     def start(self, mode_init=None, **kwargs):
         """
         Initializes the KISS device and commits configuration.
@@ -233,7 +249,7 @@ class Kiss(object):
         else:
             return None
 
-    def write(self, frame_bytes):
+    def write(self, frame_bytes, port=0):
         """
         Writes frame to KISS interface.
 
@@ -249,7 +265,7 @@ class Kiss(object):
         if interface_handler is not None:
             return interface_handler(
                 [kiss.constants.FEND] +
-                [kiss.constants.DATA_FRAME] +
+                [Kiss.__command_byte_combine(port, kiss.constants.DATA_FRAME)] +
                 Kiss.__escape_special_codes(frame_bytes) +
                 [kiss.constants.FEND]
             )
