@@ -154,17 +154,6 @@ def valid_callsign(callsign):
     return True
 
 
-
-
-
-
-
-
-
-
-
-
-
 def run_doctest():  # pragma: no cover
     """Runs doctests for this module."""
     import doctest
