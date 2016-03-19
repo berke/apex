@@ -174,14 +174,14 @@ class AprsKiss(kiss.Kiss):
             ssid = 0
         return {'callsign': call_sign, 'ssid': int(ssid)}
 
-    def write(self, frame):
+    def write(self, frame, port=0):
         """Writes APRS-encoded frame to KISS device.
 
         :param frame: APRS frame to write to KISS device.
         :type frame: dict
         """
         encoded_frame = AprsKiss.__encode_frame(frame)
-        super(AprsKiss, self).write(encoded_frame)
+        super(AprsKiss, self).write(encoded_frame, port)
 
     def read(self):
         """Reads APRS-encoded frame from KISS device.

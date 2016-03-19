@@ -16,10 +16,10 @@ import aprs
 import aprs.util
 import threading
 
-aprskiss = aprs.AprsKiss(com_port="/dev/ttyUSB1", baud=9600)
-aprskiss.start(kiss.constants.MODE_INIT_KENWOOD_D710)
-#aprskiss = aprs.AprsKiss(com_port="/dev/ttyUSB0", baud=38400)
-#aprskiss.start(kiss.constants.MODE_INIT_W8DED)
+kenwood = aprs.AprsKiss(com_port="/dev/ttyUSB1", baud=9600)
+kenwood.start(kiss.constants.MODE_INIT_KENWOOD_D710)
+rpr = aprs.AprsKiss(com_port="/dev/ttyUSB0", baud=38400)
+rpr.start(kiss.constants.MODE_INIT_W8DED)
 
 def sigint_handler(signal, frame):
     aprskiss.close()
@@ -31,14 +31,28 @@ print("Press ctrl + c at any time to exit")
 
 #After 5 seconds send out a test package.
 time.sleep(1)
-beacon_frame = {
+beacon_frame_vhf = {
+    'source': 'WI2ARD-1',
+    'destination': 'APRS',
+    'path': 'WIDE1-1,WIDE2-2',
+    'text': list(b'!/:=i@;N.G& --G/D R-I-R H24')
+}
+
+beacon_frame_hf = {
     'source': 'WI2ARD',
     'destination': 'APRS',
     'path': 'WIDE1-1',
     'text': list(b'!/:=i@;N.G& --G/D R-I-R H24')
 }
 
-status_frame = {
+status_frame_vhf = {
+    'source': 'WI2ARD-1',
+    'destination': 'APRS',
+    'path': 'WIDE1-1,WIDE2-2',
+    'text': list(b'>Listening on 146.52Mhz http://JeffreyFreeman.me')
+}
+
+status_frame_hf = {
     'source': 'WI2ARD',
     'destination': 'APRS',
     'path': 'WIDE1-1',
@@ -49,26 +63,37 @@ status_frame = {
 #a.connect("noam.aprs2.net".encode('ascii'), "14580".encode('ascii'))
 #a.send('WI2ARD>APRS:>Hello World!')
 
-def kiss_reader(decoded_frame):
-    formatted_aprs = aprs.util.format_aprs_frame(decoded_frame)
-    print("<< " + formatted_aprs)
-
 def kiss_reader_thread():
     print("Begining kiss reader thread...")
     while 1:
-        frame = aprskiss.read()
+        something_read = False
+        frame = kenwood.read()
         if frame is not None and len(frame):
-            kiss_reader(frame)
-        else:
+            something_read = True
+            formatted_aprs = aprs.util.format_aprs_frame(frame)
+            print("K<< " + formatted_aprs)
+
+        frame = rpr.read()
+        if frame is not None and len(frame):
+            something_read = True
+            formatted_aprs = aprs.util.format_aprs_frame(frame)
+            print("R<< " + formatted_aprs)
+
+        if something_read is False:
             time.sleep(1)
 
 
 threading.Thread(target=kiss_reader_thread, args=()).start()
 while 1 :
     # let's wait one second before reading output (let's give device time to answer)
-    aprskiss.write(beacon_frame)
-    print(">> " + aprs.util.format_aprs_frame(beacon_frame))
-    aprskiss.write(status_frame)
-    print(">> " + aprs.util.format_aprs_frame(status_frame))
+    kenwood.write(beacon_frame_vhf)
+    print("K>> " + aprs.util.format_aprs_frame(beacon_frame_vhf))
+    kenwood.write(status_frame_vhf)
+    print("K>> " + aprs.util.format_aprs_frame(status_frame_vhf))
+
+    rpr.write(beacon_frame_hf)
+    print("R>> " + aprs.util.format_aprs_frame(beacon_frame_hf))
+    rpr.write(status_frame_hf)
+    print("R>> " + aprs.util.format_aprs_frame(status_frame_hf))
     time.sleep(600)
 
