@@ -107,7 +107,9 @@ def format_aprs_frame(frame):
     formatted_frame = '>'.join([frame['source'], frame['destination']])
     if frame['path']:
         formatted_frame = ','.join([formatted_frame, frame['path']])
-    formatted_frame = ':'.join([formatted_frame, frame['text']])
+    formatted_frame += ':'
+    for frame_byte in frame['text']:
+        formatted_frame += chr(frame_byte)
     return formatted_frame
 
 def identity_as_string(identity):
