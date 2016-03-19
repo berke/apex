@@ -47,9 +47,9 @@ status_frame = {
 #a.connect("noam.aprs2.net".encode('ascii'), "14580".encode('ascii'))
 #a.send('WI2ARD>APRS:>Hello World!')
 
-def kiss_reader(frame):
+def kiss_reader(decoded_frame):
     #print("reader called [" + str(len(frame)) + "]: " + str(frame))
-    decoded_frame = aprs.util.decode_frame(frame)
+    #decoded_frame = aprs.util.decode_frame(frame)
     #print("decoded: " + str(decoded_frame))
     formatted_aprs = aprs.util.format_aprs_frame(decoded_frame)
     print("<< " + formatted_aprs)

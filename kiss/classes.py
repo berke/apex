@@ -9,10 +9,8 @@ __copyright__ = 'Copyright 2016, Syncleus, Inc. and contributors'
 
 
 import logging
-
 import serial
 import socket
-
 import kiss.constants
 import kiss.util
 

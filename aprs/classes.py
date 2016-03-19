@@ -16,6 +16,7 @@ import kiss.constants
 import requests
 import aprs.constants
 import aprs.util
+import math
 
 
 class APRS(object):
@@ -147,6 +148,107 @@ class APRSKISS(kiss.KISS):
         """
         encoded_frame = APRSKISS.__encode_frame(frame)
         super(APRSKISS, self).write(encoded_frame)
+
+    def read(self):
+        """Reads APRS-encoded frame from KISS device.
+        """
+        frame = super(APRSKISS, self).read()
+        return APRSKISS.__decode_frame(frame)
+
+    @staticmethod
+    def __decode_frame(raw_frame):
+        """
+        Decodes a KISS-encoded APRS frame.
+
+        :param raw_frame: KISS-encoded frame to decode.
+        :type raw_frame: str
+
+        :return: APRS frame-as-dict.
+        :rtype: dict
+        """
+        logging.debug('raw_frame=%s', raw_frame)
+        frame = {}
+        frame_len = len(raw_frame)
+
+        if frame_len > 16:
+            for raw_slice in range(0, frame_len):
+                # Is address field length correct?
+                if raw_frame[raw_slice] & 0x01 and ((raw_slice + 1) % 7) == 0:
+                    i = (raw_slice + 1) / 7
+                    # Less than 2 callsigns?
+                    if 1 < i < 11:
+                        if (raw_frame[raw_slice + 1] & 0x03 == 0x03 and raw_frame[raw_slice + 2] in [0xf0, 0xcf]):
+                            frame['text'] = raw_frame[raw_slice + 3:]
+                            frame['destination'] = APRSKISS.__identity_as_string(APRSKISS.__extract_callsign(raw_frame))
+                            frame['source'] = APRSKISS.__identity_as_string(APRSKISS.__extract_callsign(raw_frame[7:]))
+                            frame['path'] = APRSKISS.__format_path(math.floor(i), raw_frame)
+                            return frame
+
+        logging.debug('frame=%s', frame)
+        return frame
+
+    @staticmethod
+    def __extract_path(start, raw_frame):
+        """Extracts path from raw APRS KISS frame.
+
+        :param start:
+        :param raw_frame: Raw APRS frame from a KISS device.
+
+        :return: Full path from APRS frame.
+        :rtype: list
+        """
+        full_path = []
+
+        for i in range(2, start):
+            path = APRSKISS.__identity_as_string(APRSKISS.__extract_callsign(raw_frame[i * 7:]))
+            if path:
+                if raw_frame[i * 7 + 6] & 0x80:
+                    full_path.append(''.join([path, '*']))
+                else:
+                    full_path.append(path)
+
+        return full_path
+
+    @staticmethod
+    def __format_path(start, raw_frame):
+        """
+        Formats path from raw APRS KISS frame.
+
+        :param start:
+        :param raw_frame: Raw APRS KISS frame.
+
+        :return: Formatted APRS path.
+        :rtype: str
+        """
+        return ','.join(APRSKISS.__extract_path(start, raw_frame))
+
+    @staticmethod
+    def __extract_callsign(raw_frame):
+        """
+        Extracts callsign from a raw KISS frame.
+
+        :param raw_frame: Raw KISS Frame to decode.
+        :returns: Dict of callsign and ssid.
+        :rtype: dict
+        """
+        callsign = ''.join([chr(x >> 1) for x in raw_frame[:6]]).strip()
+        ssid = ((raw_frame[6]) >> 1) & 0x0f
+        return {'callsign': callsign, 'ssid': ssid}
+
+    @staticmethod
+    def __identity_as_string(identity):
+        """
+        Returns a fully-formatted callsign (Callsign + SSID).
+
+        :param identity: Callsign Dictionary {'callsign': '', 'ssid': n}
+        :type callsign: dict
+        :returns: Callsign[-SSID].
+        :rtype: str
+        """
+        if identity['ssid'] > 0:
+            return '-'.join([identity['callsign'], str(identity['ssid'])])
+        else:
+            return identity['callsign']
 
     @staticmethod
     def __encode_frame(frame):
